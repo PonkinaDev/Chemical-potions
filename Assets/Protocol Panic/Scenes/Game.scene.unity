@@ -800,6 +800,8 @@ GameObject:
   - component: {fileID: 1145490120}
   - component: {fileID: 1145490119}
   - component: {fileID: 1145490118}
+  - component: {fileID: 1145490123}
+  - component: {fileID: 1145490122}
   m_Layer: 0
   m_Name: Mixer2
   m_TagString: Untagged
@@ -900,6 +902,38 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1145490122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1145490117}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f75de371706d9d54d99f5d7006bdf352, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PotionMixer
+  _CurrentColor: 0
+--- !u!114 &1145490123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1145490117}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 1048240331
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 1145490122}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &1301291194
 GameObject:
   m_ObjectHideFlags: 0
@@ -1026,7 +1060,7 @@ GameObject:
   - component: {fileID: 1449123564}
   - component: {fileID: 1449123568}
   m_Layer: 0
-  m_Name: DispenserGreen
+  m_Name: DispenserYellow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1137,7 +1171,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19885cf8e6683b04ca3bfe0f15a2d516, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::IngredientDispenser
-  _ingredientType: 5
+  _ingredientType: 3
 --- !u!1 &1628659023
 GameObject:
   m_ObjectHideFlags: 0
@@ -1500,6 +1534,8 @@ GameObject:
   - component: {fileID: 1789425584}
   - component: {fileID: 1789425583}
   - component: {fileID: 1789425582}
+  - component: {fileID: 1789425587}
+  - component: {fileID: 1789425586}
   m_Layer: 0
   m_Name: Mixer3
   m_TagString: Untagged
@@ -1600,6 +1636,38 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1789425586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1789425581}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f75de371706d9d54d99f5d7006bdf352, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PotionMixer
+  _CurrentColor: 0
+--- !u!114 &1789425587
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1789425581}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 3573860052
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 1789425586}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &1824975904
 GameObject:
   m_ObjectHideFlags: 0
@@ -1612,6 +1680,8 @@ GameObject:
   - component: {fileID: 1824975907}
   - component: {fileID: 1824975906}
   - component: {fileID: 1824975905}
+  - component: {fileID: 1824975910}
+  - component: {fileID: 1824975909}
   m_Layer: 0
   m_Name: Mixer1
   m_TagString: Untagged
@@ -1712,6 +1782,38 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1824975909
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1824975904}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f75de371706d9d54d99f5d7006bdf352, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PotionMixer
+  _CurrentColor: 0
+--- !u!114 &1824975910
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1824975904}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 4260941914
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 1824975909}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &1964196299
 GameObject:
   m_ObjectHideFlags: 0

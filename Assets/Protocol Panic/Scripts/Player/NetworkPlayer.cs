@@ -11,7 +11,7 @@ public class NetworkPlayer : NetworkBehaviour
     [SerializeField] private Transform _holdPoint;
 
     [Header("Interaction")]
-    [SerializeField] private float _interactionRadius = 1.5f;
+    [SerializeField] private float _interactionRadius = 2f;
 
     private CharacterController _cc;
 
@@ -29,8 +29,11 @@ public class NetworkPlayer : NetworkBehaviour
     private IngredientType _lastVisualIngredient =
         IngredientType.None;
 
-    // DISPENSADOR ACTUAL
     private IngredientDispenser _nearbyDispenser;
+
+    private PotionMixer _nearbyMixer;
+
+    private float _pickupCooldown = 0f;
 
     public override void Spawned()
     {
@@ -46,10 +49,6 @@ public class NetworkPlayer : NetworkBehaviour
 
         if (!GetInput(out PlayerInputData input))
             return;
-
-        // ─────────────────────────
-        // MOVIMIENTO
-        // ─────────────────────────
 
         Vector3 direction = new Vector3(
             input.MovementInput.x,
@@ -74,18 +73,17 @@ public class NetworkPlayer : NetworkBehaviour
                 Quaternion.LookRotation(direction);
         }
 
-        // ─────────────────────────
-        // DETECTAR DISPENSADOR
-        // ─────────────────────────
-
         DetectNearbyDispenser();
 
-        // ─────────────────────────
-        // INTERACTUAR
-        // ─────────────────────────
+        DetectNearbyMixer();
 
-        if (input.PickupPressed)
+        _pickupCooldown -= Runner.DeltaTime;
+
+        if (input.PickupPressed &&
+            _pickupCooldown <= 0f)
         {
+            _pickupCooldown = 0.25f;
+
             Interact();
         }
     }
@@ -106,10 +104,6 @@ public class NetworkPlayer : NetworkBehaviour
 
         UpdateHeldVisual();
     }
-
-    // ─────────────────────────
-    // DETECCIÓN
-    // ─────────────────────────
 
     private void DetectNearbyDispenser()
     {
@@ -145,23 +139,78 @@ public class NetworkPlayer : NetworkBehaviour
         }
     }
 
-    // ─────────────────────────
-    // INTERACCIÓN
-    // ─────────────────────────
+    private void DetectNearbyMixer()
+    {
+        _nearbyMixer = null;
+
+        Collider[] hits =
+            Physics.OverlapSphere(
+                transform.position,
+                _interactionRadius
+            );
+
+        float closestDistance = 999f;
+
+        foreach (Collider hit in hits)
+        {
+            PotionMixer mixer =
+                hit.GetComponent<PotionMixer>();
+
+            if (mixer == null)
+                continue;
+
+            float dist =
+                Vector3.Distance(
+                    transform.position,
+                    mixer.transform.position
+                );
+
+            if (dist < closestDistance)
+            {
+                closestDistance = dist;
+                _nearbyMixer = mixer;
+            }
+        }
+    }
 
     private void Interact()
     {
-        if (_nearbyDispenser == null)
-            return;
+        if (_nearbyMixer != null &&
+            HeldIngredient != IngredientType.None)
+        {
+            bool success =
+                _nearbyMixer.TryAddIngredient(
+                    HeldIngredient
+                );
 
-        // Reemplaza automáticamente
-        HeldIngredient =
-            _nearbyDispenser.IngredientType;
+            if (success)
+            {
+                ClearIngredient();
+            }
+
+            return;
+        }
+
+        if (_nearbyDispenser != null)
+        {
+            HeldIngredient =
+                _nearbyDispenser.IngredientType;
+        }
     }
 
-    // ─────────────────────────
-    // VISUAL
-    // ─────────────────────────
+    public bool HasIngredient()
+    {
+        return HeldIngredient != IngredientType.None;
+    }
+
+    public void ClearIngredient()
+    {
+        if (!HasStateAuthority)
+            return;
+
+        HeldIngredient =
+            IngredientType.None;
+    }
 
     private void UpdateHeldVisual()
     {
@@ -255,7 +304,6 @@ public class NetworkPlayer : NetworkBehaviour
         _heldVisual = visual;
     }
 
-    // DEBUG VISUAL
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
