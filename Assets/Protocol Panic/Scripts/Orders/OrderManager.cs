@@ -1,4 +1,5 @@
 using Fusion;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,26 +8,34 @@ public class OrderManager : NetworkBehaviour
     public static OrderManager Instance;
 
     [Header("UI")]
-    [SerializeField]
-    private Image _orderImage;
+    [SerializeField] private Transform _orderContainer;
+    [SerializeField] private GameObject _orderCardPrefab;
+    [SerializeField] private TMP_Text _totalMoneyText;
 
-    [Networked]
-    public IngredientType CurrentOrder { get; set; }
+    [Header("Settings")]
+    [SerializeField] private int _maxOrders = 3;
 
-    private IngredientType _lastVisualOrder =
-        IngredientType.None;
+    [Networked] public int TotalMoney { get; set; }
 
-    private void Awake()
-    {
-        Instance = this;
-    }
+    // =========================
+    // NETWORKED ORDERS
+    // =========================
+    [Networked, Capacity(10)]
+    public NetworkArray<OrderNetworkData> Orders => default;
+
+    private readonly System.Collections.Generic.List<GameObject> _spawnedCards = new();
 
     public override void Spawned()
     {
+        Instance = this;
+
         if (HasStateAuthority)
         {
-            GenerateNewOrder();
+            for (int i = 0; i < _maxOrders; i++)
+                GenerateOrder();
         }
+
+        UpdateUI();
     }
 
     public override void Render()
@@ -34,97 +43,161 @@ public class OrderManager : NetworkBehaviour
         UpdateUI();
     }
 
-    public bool TryDeliver(
-        IngredientType ingredient
-    )
+    // =========================
+    // DELIVERY (HOST ONLY LOGIC)
+    // =========================
+    public bool TryDeliver(IngredientType ingredient, PotionState potionState)
     {
-        if (ingredient != CurrentOrder)
+        if (!HasStateAuthority)
             return false;
 
-        GenerateNewOrder();
+        if (potionState != PotionState.Cooked)
+            return false;
 
-        return true;
-    }
-
-    private void GenerateNewOrder()
-    {
-        int random =
-            Random.Range(0, 6);
-
-        switch (random)
+        for (int i = 0; i < Orders.Length; i++)
         {
-            case 0:
-                CurrentOrder =
-                    IngredientType.Red;
-                break;
+            if (Orders[i].Ingredient == ingredient)
+            {
+                TotalMoney += Orders[i].Reward;
 
-            case 1:
-                CurrentOrder =
-                    IngredientType.Blue;
-                break;
+                RemoveOrder(i);
+                GenerateOrder();
 
-            case 2:
-                CurrentOrder =
-                    IngredientType.Yellow;
-                break;
-
-            case 3:
-                CurrentOrder =
-                    IngredientType.Green;
-                break;
-
-            case 4:
-                CurrentOrder =
-                    IngredientType.Orange;
-                break;
-
-            case 5:
-                CurrentOrder =
-                    IngredientType.Purple;
-                break;
+                return true;
+            }
         }
+
+        return false;
     }
 
+    // =========================
+    // ORDER GENERATION (HOST ONLY)
+    // =========================
+    private void GenerateOrder()
+    {
+        IngredientType ingredient = GetRandomIngredient();
+
+        int reward = IsPrimary(ingredient) ? 10 : 20;
+
+        for (int i = 0; i < Orders.Length; i++)
+        {
+            if (Orders[i].Ingredient == IngredientType.None)
+            {
+                Orders.Set(i, new OrderNetworkData
+                {
+                    Ingredient = ingredient,
+                    Reward = reward
+                });
+                return;
+            }
+        }
+
+        // fallback (si no hay slots vacíos)
+        Orders.Set(0, new OrderNetworkData
+        {
+            Ingredient = ingredient,
+            Reward = reward
+        });
+    }
+
+    private void RemoveOrder(int index)
+    {
+        Orders.Set(index, new OrderNetworkData
+        {
+            Ingredient = IngredientType.None,
+            Reward = 0
+        });
+    }
+
+    // =========================
+    // UI (CLIENT + HOST)
+    // =========================
     private void UpdateUI()
     {
-        if (_lastVisualOrder ==
-            CurrentOrder)
-            return;
+        if (_totalMoneyText != null)
+            _totalMoneyText.text = "Money: $" + TotalMoney;
 
-        _lastVisualOrder =
-            CurrentOrder;
+        ClearCards();
 
-        switch (CurrentOrder)
+        for (int i = 0; i < Orders.Length; i++)
         {
-            case IngredientType.Red:
-                _orderImage.color =
-                    Color.red;
-                break;
+            var order = Orders[i];
 
-            case IngredientType.Blue:
-                _orderImage.color =
-                    Color.blue;
-                break;
+            if (order.Ingredient == IngredientType.None)
+                continue;
 
-            case IngredientType.Yellow:
-                _orderImage.color =
-                    Color.yellow;
-                break;
+            GameObject card = Instantiate(_orderCardPrefab, _orderContainer);
+            _spawnedCards.Add(card);
 
-            case IngredientType.Green:
-                _orderImage.color =
-                    Color.green;
-                break;
+            Image potionImage = card.transform
+                .Find("PotionImage")
+                .GetComponent<Image>();
 
-            case IngredientType.Orange:
-                _orderImage.color =
-                    new Color(1f, 0.5f, 0f);
-                break;
+            TMP_Text rewardText = card.transform
+                .Find("RewardText")
+                .GetComponent<TMP_Text>();
 
-            case IngredientType.Purple:
-                _orderImage.color =
-                    new Color(0.5f, 0f, 1f);
-                break;
+            potionImage.color = GetColor(order.Ingredient);
+            rewardText.text = "$" + order.Reward;
         }
+    }
+
+    private void ClearCards()
+    {
+        foreach (var card in _spawnedCards)
+        {
+            if (card != null)
+                Destroy(card);
+        }
+
+        _spawnedCards.Clear();
+    }
+
+    // =========================
+    // HELPERS
+    // =========================
+    private IngredientType GetRandomIngredient()
+    {
+        int random = Random.Range(0, 6);
+
+        return random switch
+        {
+            0 => IngredientType.Red,
+            1 => IngredientType.Blue,
+            2 => IngredientType.Yellow,
+            3 => IngredientType.Green,
+            4 => IngredientType.Orange,
+            _ => IngredientType.Purple
+        };
+    }
+
+    private bool IsPrimary(IngredientType ingredient)
+    {
+        return ingredient == IngredientType.Red ||
+               ingredient == IngredientType.Blue ||
+               ingredient == IngredientType.Yellow;
+    }
+
+    private Color GetColor(IngredientType ingredient)
+    {
+        return ingredient switch
+        {
+            IngredientType.Red => Color.red,
+            IngredientType.Blue => Color.blue,
+            IngredientType.Yellow => Color.yellow,
+            IngredientType.Green => Color.green,
+            IngredientType.Orange => new Color(1f, 0.5f, 0f),
+            IngredientType.Purple => new Color(0.5f, 0f, 1f),
+            _ => Color.white
+        };
+    }
+
+    // =========================
+    // NETWORK STRUCT
+    // =========================
+    public struct OrderNetworkData : INetworkStruct
+    {
+        public IngredientType Ingredient;
+        public int Reward;
     }
 }

@@ -9,11 +9,12 @@ public class PlayerSpawner : MonoBehaviour, IPlayerSpawner
 
     private readonly Dictionary<PlayerRef, NetworkObject> _spawnedPlayers = new();
 
-    private static readonly Vector3[] SpawnPositions =
-    {
-        new(-2f, 1f, 0f),
-        new( 2f, 1f, 0f)
-    };
+    // Posiciones de spawn para cada jugador
+private static readonly Vector3[] SpawnPositions =
+{
+    new(-3f, 0f, 1f),  // Jugador 1
+    new( 3f, 0f, 1f)   // Jugador 2
+};
 
     public void SpawnPlayer(NetworkRunner runner, PlayerRef player)
     {
