@@ -1,6 +1,6 @@
 using Fusion;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class OrderManager : NetworkBehaviour
 {
@@ -8,13 +8,31 @@ public class OrderManager : NetworkBehaviour
 
     [Header("UI")]
     [SerializeField]
-    private Image _orderImage;
+    private Transform _ordersContainer;
+
+    [SerializeField]
+    private OrderCardUI _orderCardPrefab;
+
+    [SerializeField]
+    private TextMeshProUGUI _moneyText;
 
     [Networked]
-    public IngredientType CurrentOrder { get; set; }
+    public IngredientType Order1 { get; set; }
 
-    private IngredientType _lastVisualOrder =
-        IngredientType.None;
+    [Networked]
+    public IngredientType Order2 { get; set; }
+
+    [Networked]
+    public IngredientType Order3 { get; set; }
+
+    [Networked]
+    public int Money { get; set; }
+
+    private IngredientType _lastOrder1;
+    private IngredientType _lastOrder2;
+    private IngredientType _lastOrder3;
+
+    private int _lastMoney = -1;
 
     private void Awake()
     {
@@ -25,28 +43,76 @@ public class OrderManager : NetworkBehaviour
     {
         if (HasStateAuthority)
         {
-            GenerateNewOrder();
+            Money = 0;
+
+            Order1 = GetRandomOrder();
+            Order2 = GetRandomOrder();
+            Order3 = GetRandomOrder();
         }
+
+        RefreshOrdersUI();
+
+        UpdateMoneyUI();
     }
 
     public override void Render()
     {
-        UpdateUI();
+        if (
+            _lastOrder1 != Order1 ||
+            _lastOrder2 != Order2 ||
+            _lastOrder3 != Order3
+        )
+        {
+            RefreshOrdersUI();
+        }
+
+        UpdateMoneyUI();
     }
 
     public bool TryDeliver(
         IngredientType ingredient
     )
     {
-        if (ingredient != CurrentOrder)
-            return false;
+        if (ingredient == Order1)
+        {
+            Money += GetRewardValue(
+                ingredient
+            );
 
-        GenerateNewOrder();
+            Order1 = Order2;
+            Order2 = Order3;
+            Order3 = GetRandomOrder();
 
-        return true;
+            return true;
+        }
+
+        if (ingredient == Order2)
+        {
+            Money += GetRewardValue(
+                ingredient
+            );
+
+            Order2 = Order3;
+            Order3 = GetRandomOrder();
+
+            return true;
+        }
+
+        if (ingredient == Order3)
+        {
+            Money += GetRewardValue(
+                ingredient
+            );
+
+            Order3 = GetRandomOrder();
+
+            return true;
+        }
+
+        return false;
     }
 
-    private void GenerateNewOrder()
+    private IngredientType GetRandomOrder()
     {
         int random =
             Random.Range(0, 6);
@@ -54,77 +120,93 @@ public class OrderManager : NetworkBehaviour
         switch (random)
         {
             case 0:
-                CurrentOrder =
-                    IngredientType.Red;
-                break;
+                return IngredientType.Red;
 
             case 1:
-                CurrentOrder =
-                    IngredientType.Blue;
-                break;
+                return IngredientType.Blue;
 
             case 2:
-                CurrentOrder =
-                    IngredientType.Yellow;
-                break;
+                return IngredientType.Yellow;
 
             case 3:
-                CurrentOrder =
-                    IngredientType.Green;
-                break;
+                return IngredientType.Green;
 
             case 4:
-                CurrentOrder =
-                    IngredientType.Orange;
-                break;
+                return IngredientType.Orange;
 
             case 5:
-                CurrentOrder =
-                    IngredientType.Purple;
-                break;
+                return IngredientType.Purple;
         }
+
+        return IngredientType.Red;
     }
 
-    private void UpdateUI()
+    private void RefreshOrdersUI()
     {
-        if (_lastVisualOrder ==
-            CurrentOrder)
-            return;
+        _lastOrder1 = Order1;
+        _lastOrder2 = Order2;
+        _lastOrder3 = Order3;
 
-        _lastVisualOrder =
-            CurrentOrder;
+        foreach (Transform child
+            in _ordersContainer)
+        {
+            Destroy(child.gameObject);
+        }
 
-        switch (CurrentOrder)
+        CreateCard(Order1);
+
+        CreateCard(Order2);
+
+        CreateCard(Order3);
+    }
+
+    private void CreateCard(
+        IngredientType order
+    )
+    {
+        OrderCardUI card =
+            Instantiate(
+                _orderCardPrefab,
+                _ordersContainer
+            );
+
+        card.Setup(
+            order,
+            GetRewardValue(order)
+        );
+    }
+
+    private int GetRewardValue(
+        IngredientType ingredient
+    )
+    {
+        switch (ingredient)
         {
             case IngredientType.Red:
-                _orderImage.color =
-                    Color.red;
-                break;
-
             case IngredientType.Blue:
-                _orderImage.color =
-                    Color.blue;
-                break;
-
             case IngredientType.Yellow:
-                _orderImage.color =
-                    Color.yellow;
-                break;
+                return 10;
 
             case IngredientType.Green:
-                _orderImage.color =
-                    Color.green;
-                break;
-
             case IngredientType.Orange:
-                _orderImage.color =
-                    new Color(1f, 0.5f, 0f);
-                break;
-
             case IngredientType.Purple:
-                _orderImage.color =
-                    new Color(0.5f, 0f, 1f);
-                break;
+                return 20;
+        }
+
+        return 0;
+    }
+
+    private void UpdateMoneyUI()
+    {
+        if (_lastMoney == Money)
+            return;
+
+        _lastMoney = Money;
+
+        if (_moneyText != null)
+        {
+            _moneyText.text =
+                "$ " + Money;
         }
     }
 }

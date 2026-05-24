@@ -13,8 +13,8 @@ public class PlayerSpawner : MonoBehaviour, IPlayerSpawner
     // Posiciones de spawn para cada jugador
 private static readonly Vector3[] SpawnPositions =
 {
-    new(-2f, 1f, 0f),  // Jugador 1
-    new( 2f, 1f, 0f)   // Jugador 2
+    new(-3f, 0f, 1f),  // Jugador 1
+    new( 3f, 0f, 1f)   // Jugador 2
 };
 
     public void SpawnPlayer(NetworkRunner runner, PlayerRef player)
