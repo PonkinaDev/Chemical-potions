@@ -85,7 +85,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9042392106076077253}
-  m_Enabled: 0
+  m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -186,8 +186,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _moveSpeed: 5
   _holdPoint: {fileID: 9098531824103634435}
-  _heldItemPrefab: {fileID: 4960806819752657302, guid: 31f7be41624fedd44b169aaa07e2f6ac, type: 3}
-  _colorMaterial: {fileID: 2100000, guid: 054b9cc264f500641a881c93359dd4e1, type: 2}
   _interactionRadius: 2
   _HeldIngredient: 0
   _HeldPotionState: 0
@@ -279,6 +277,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: e6c668cb62bdb9541912a77adbf799ae, type: 3}
       propertyPath: m_Name
       value: Boy
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: e6c668cb62bdb9541912a77adbf799ae, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
