@@ -46,6 +46,9 @@ GameObject:
   - component: {fileID: 2311413574112747045}
   - component: {fileID: 1491913071969270943}
   - component: {fileID: 7819335598468601679}
+  - component: {fileID: 5286339309798646372}
+  - component: {fileID: 1918949582692232730}
+  - component: {fileID: 5818288800153269863}
   m_Layer: 0
   m_Name: OldManPrefab
   m_TagString: Untagged
@@ -184,9 +187,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee2b7ba0c7c72f34fa92649989b44a96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _moveSpeed: 5
-  _holdPoint: {fileID: 9098531824103634435}
-  _interactionRadius: 2
+  _moveSpeed: 15
+  _heldItemVisual: {fileID: 5818288800153269863}
+  _detector: {fileID: 1918949582692232730}
+  _interactionHandler: {fileID: 5286339309798646372}
   _HeldIngredient: 0
   _HeldPotionState: 0
 --- !u!114 &7819335598468601679
@@ -206,6 +210,44 @@ MonoBehaviour:
   SyncParent: 0
   _autoAOIOverride: 1
   DisableSharedModeInterpolation: 0
+--- !u!114 &5286339309798646372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9042392106076077253}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bf495b68ff7a0b439df401e0242d4ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInteractionHandler
+--- !u!114 &1918949582692232730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9042392106076077253}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3bc41097a3d90f4eb0829ac5064c912, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInteractableDetector
+  _interactionRadius: 2
+--- !u!114 &5818288800153269863
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9042392106076077253}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bacaa987ef9c744ea558c3c220633fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHeldItemVisual
+  _holdPoint: {fileID: 9098531824103634435}
 --- !u!1001 &424837833332508879
 PrefabInstance:
   m_ObjectHideFlags: 0
