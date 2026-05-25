@@ -13,7 +13,9 @@ public class NetworkPlayer : NetworkBehaviour
     [Header("Interaction")]
     [SerializeField] private float _interactionRadius = 2f;
 
-    private CharacterController _cc;
+    private const float PickupCooldownDuration = 0.25f;
+
+    private CharacterController _characterController;
 
     [Networked]
     private Vector3 NetworkedPosition { get; set; }
@@ -29,28 +31,20 @@ public class NetworkPlayer : NetworkBehaviour
 
     private GameObject _heldVisual;
 
-    private IngredientType _lastVisualIngredient =
-        IngredientType.None;
-
-    private PotionState _lastVisualPotionState =
-        PotionState.Raw;
+    private IngredientType _lastVisualIngredient = IngredientType.None;
+    private PotionState _lastVisualState = PotionState.Raw;
 
     private IngredientDispenser _nearbyDispenser;
-
     private PotionMixer _nearbyMixer;
-
     private PotionCauldron _nearbyCauldron;
-
     private DeliveryZone _nearbyDeliveryZone;
-
     private TrashBin _nearbyTrashBin;
 
-    private float _pickupCooldown = 0f;
+    private float _pickupCooldown;
 
     public override void Spawned()
     {
-        _cc = GetComponent<CharacterController>();
-
+        _characterController = GetComponent<CharacterController>();
         UpdateHeldVisual();
     }
 
@@ -62,7 +56,23 @@ public class NetworkPlayer : NetworkBehaviour
         if (!GetInput(out PlayerInputData input))
             return;
 
-        Vector3 direction = new Vector3(
+        HandleMovement(input);
+        DetectInteractables();
+        UpdateCooldown();
+
+        if (CanInteract(input))
+            Interact();
+    }
+
+    public override void Render()
+    {
+        SmoothNetworkTransform();
+        UpdateHeldVisual();
+    }
+
+    private void HandleMovement(PlayerInputData input)
+    {
+        Vector3 direction = new(
             input.MovementInput.x,
             0f,
             input.MovementInput.y
@@ -70,43 +80,17 @@ public class NetworkPlayer : NetworkBehaviour
 
         direction.Normalize();
 
-        Vector3 movement =
-            direction *
-            _moveSpeed *
-            Runner.DeltaTime;
+        Vector3 movement = direction * _moveSpeed * Runner.DeltaTime;
 
-        _cc.Move(movement);
+        _characterController.Move(movement);
 
         NetworkedPosition = transform.position;
 
         if (direction != Vector3.zero)
-        {
-            NetworkedRotation =
-                Quaternion.LookRotation(direction);
-        }
-
-        DetectNearbyDispenser();
-
-        DetectNearbyMixer();
-
-        DetectNearbyCauldron();
-
-        DetectNearbyDeliveryZone();
-
-        DetectNearbyTrashBin();
-
-        _pickupCooldown -= Runner.DeltaTime;
-
-        if (input.PickupPressed &&
-            _pickupCooldown <= 0f)
-        {
-            _pickupCooldown = 0.25f;
-
-            Interact();
-        }
+            NetworkedRotation = Quaternion.LookRotation(direction);
     }
 
-    public override void Render()
+    private void SmoothNetworkTransform()
     {
         transform.position = Vector3.Lerp(
             transform.position,
@@ -119,264 +103,173 @@ public class NetworkPlayer : NetworkBehaviour
             NetworkedRotation,
             Runner.DeltaTime * 15f
         );
-
-        UpdateHeldVisual();
     }
 
-    private void DetectNearbyDispenser()
+    private void DetectInteractables()
     {
-        _nearbyDispenser = null;
+        Collider[] hits = Physics.OverlapSphere(
+            transform.position,
+            _interactionRadius
+        );
 
-        Collider[] hits =
-            Physics.OverlapSphere(
-                transform.position,
-                _interactionRadius
-            );
+        _nearbyDispenser = FindClosest<IngredientDispenser>(hits);
+        _nearbyMixer = FindClosest<PotionMixer>(hits);
+        _nearbyCauldron = FindClosest<PotionCauldron>(hits);
+        _nearbyDeliveryZone = FindClosest<DeliveryZone>(hits);
+        _nearbyTrashBin = FindClosest<TrashBin>(hits);
+    }
 
-        float closestDistance = 999f;
+    private T FindClosest<T>(Collider[] hits) where T : Component
+    {
+        T closest = null;
+        float closestDistance = float.MaxValue;
 
         foreach (Collider hit in hits)
         {
-            IngredientDispenser dispenser =
-                hit.GetComponent<IngredientDispenser>();
+            T component = hit.GetComponent<T>();
 
-            if (dispenser == null)
+            if (component == null)
                 continue;
 
-            float dist =
-                Vector3.Distance(
-                    transform.position,
-                    dispenser.transform.position
-                );
-
-            if (dist < closestDistance)
-            {
-                closestDistance = dist;
-                _nearbyDispenser = dispenser;
-            }
-        }
-    }
-
-    private void DetectNearbyMixer()
-    {
-        _nearbyMixer = null;
-
-        Collider[] hits =
-            Physics.OverlapSphere(
+            float distance = Vector3.Distance(
                 transform.position,
-                _interactionRadius
+                component.transform.position
             );
 
-        float closestDistance = 999f;
-
-        foreach (Collider hit in hits)
-        {
-            PotionMixer mixer =
-                hit.GetComponent<PotionMixer>();
-
-            if (mixer == null)
+            if (distance >= closestDistance)
                 continue;
 
-            float dist =
-                Vector3.Distance(
-                    transform.position,
-                    mixer.transform.position
-                );
-
-            if (dist < closestDistance)
-            {
-                closestDistance = dist;
-                _nearbyMixer = mixer;
-            }
+            closestDistance = distance;
+            closest = component;
         }
+
+        return closest;
     }
 
-    private void DetectNearbyCauldron()
+    private void UpdateCooldown()
     {
-        _nearbyCauldron = null;
-
-        Collider[] hits =
-            Physics.OverlapSphere(
-                transform.position,
-                _interactionRadius
-            );
-
-        foreach (Collider hit in hits)
-        {
-            PotionCauldron cauldron =
-                hit.GetComponent<PotionCauldron>();
-
-            if (cauldron != null)
-            {
-                _nearbyCauldron = cauldron;
-                return;
-            }
-        }
+        _pickupCooldown -= Runner.DeltaTime;
     }
 
-    private void DetectNearbyDeliveryZone()
+    private bool CanInteract(PlayerInputData input)
     {
-        _nearbyDeliveryZone = null;
-
-        Collider[] hits =
-            Physics.OverlapSphere(
-                transform.position,
-                _interactionRadius
-            );
-
-        foreach (Collider hit in hits)
-        {
-            DeliveryZone zone =
-                hit.GetComponent<DeliveryZone>();
-
-            if (zone != null)
-            {
-                _nearbyDeliveryZone = zone;
-                return;
-            }
-        }
-    }
-
-    private void DetectNearbyTrashBin()
-    {
-        _nearbyTrashBin = null;
-
-        Collider[] hits =
-            Physics.OverlapSphere(
-                transform.position,
-                _interactionRadius
-            );
-
-        foreach (Collider hit in hits)
-        {
-            TrashBin trash =
-                hit.GetComponent<TrashBin>();
-
-            if (trash != null)
-            {
-                _nearbyTrashBin = trash;
-                return;
-            }
-        }
+        return input.PickupPressed && _pickupCooldown <= 0f;
     }
 
     private void Interact()
     {
-        if (_nearbyTrashBin != null)
-        {
-            if (HeldIngredient !=
-                IngredientType.None)
-            {
-                ClearIngredient();
-            }
+        _pickupCooldown = PickupCooldownDuration;
 
+        if (HandleTrashInteraction())
             return;
-        }
 
-        if (_nearbyDeliveryZone != null)
-        {
-            if (HeldIngredient !=
-                IngredientType.None)
-            {
-                if (OrderManager.Instance != null)
-                {
-                    bool success =
-                        OrderManager.Instance.TryDeliver(
-                            HeldIngredient,
-                            HeldPotionState
-                        );
-
-                    if (success)
-                    {
-                        ClearIngredient();
-                    }
-                }
-            }
-
+        if (HandleDeliveryInteraction())
             return;
-        }
 
-        if (_nearbyCauldron != null)
-        {
-            if (HeldIngredient ==
-                IngredientType.None)
-            {
-                IngredientType potion;
-                PotionState state;
-
-                bool success =
-                    _nearbyCauldron.TryTakePotion(
-                        out potion,
-                        out state
-                    );
-
-                if (success)
-                {
-                    HeldIngredient =
-                        potion;
-
-                    HeldPotionState =
-                        state;
-                }
-
-                return;
-            }
-
-            bool placed =
-                _nearbyCauldron.TryAddPotion(
-                    HeldIngredient
-                );
-
-            if (placed)
-            {
-                ClearIngredient();
-            }
-
+        if (HandleCauldronInteraction())
             return;
-        }
 
-        if (_nearbyMixer != null)
+        if (HandleMixerInteraction())
+            return;
+
+        HandleDispenserInteraction();
+    }
+
+    private bool HandleTrashInteraction()
+    {
+        if (_nearbyTrashBin == null)
+            return false;
+
+        if (HasIngredient())
+            ClearIngredient();
+
+        return true;
+    }
+
+    private bool HandleDeliveryInteraction()
+    {
+        if (_nearbyDeliveryZone == null)
+            return false;
+
+        if (!HasIngredient())
+            return true;
+
+        if (OrderManager.Instance == null)
+            return true;
+
+        bool delivered = OrderManager.Instance.TryDeliver(
+            HeldIngredient,
+            HeldPotionState
+        );
+
+        if (delivered)
+            ClearIngredient();
+
+        return true;
+    }
+
+    private bool HandleCauldronInteraction()
+    {
+        if (_nearbyCauldron == null)
+            return false;
+
+        if (!HasIngredient())
         {
-            if (HeldIngredient ==
-                IngredientType.None)
-            {
-                if (_nearbyMixer.CurrentColor !=
-                    IngredientType.None)
-                {
-                    HeldIngredient =
-                        _nearbyMixer.CurrentColor;
-
-                    HeldPotionState =
-                        PotionState.Raw;
-
-                    _nearbyMixer.CurrentColor =
-                        IngredientType.None;
-                }
-
-                return;
-            }
-
-            bool success =
-                _nearbyMixer.TryAddIngredient(
-                    HeldIngredient
-                );
+            bool success = _nearbyCauldron.TryTakePotion(
+                out IngredientType potion,
+                out PotionState state
+            );
 
             if (success)
             {
-                ClearIngredient();
+                HeldIngredient = potion;
+                HeldPotionState = state;
             }
 
-            return;
+            return true;
         }
 
-        if (_nearbyDispenser != null)
+        bool placed = _nearbyCauldron.TryAddPotion(HeldIngredient);
+
+        if (placed)
+            ClearIngredient();
+
+        return true;
+    }
+
+    private bool HandleMixerInteraction()
+    {
+        if (_nearbyMixer == null)
+            return false;
+
+        if (!HasIngredient())
         {
-            HeldIngredient =
-                _nearbyDispenser.IngredientType;
+            if (_nearbyMixer.CurrentColor == IngredientType.None)
+                return true;
 
-            HeldPotionState =
-                PotionState.Raw;
+            HeldIngredient = _nearbyMixer.CurrentColor;
+            HeldPotionState = PotionState.Raw;
+
+            _nearbyMixer.CurrentColor = IngredientType.None;
+
+            return true;
         }
+
+        bool success = _nearbyMixer.TryAddIngredient(HeldIngredient);
+
+        if (success)
+            ClearIngredient();
+
+        return true;
+    }
+
+    private void HandleDispenserInteraction()
+    {
+        if (_nearbyDispenser == null)
+            return;
+
+        HeldIngredient = _nearbyDispenser.IngredientType;
+        HeldPotionState = PotionState.Raw;
     }
 
     public bool HasIngredient()
@@ -389,121 +282,89 @@ public class NetworkPlayer : NetworkBehaviour
         if (!HasStateAuthority)
             return;
 
-        HeldIngredient =
-            IngredientType.None;
-
-        HeldPotionState =
-            PotionState.Raw;
+        HeldIngredient = IngredientType.None;
+        HeldPotionState = PotionState.Raw;
     }
 
     private void UpdateHeldVisual()
     {
-        if (_lastVisualIngredient ==
-            HeldIngredient &&
-            _lastVisualPotionState ==
-            HeldPotionState)
+        if (!VisualChanged())
             return;
 
-        _lastVisualIngredient =
-            HeldIngredient;
+        DestroyHeldVisual();
 
-        _lastVisualPotionState =
-            HeldPotionState;
+        if (!HasIngredient())
+            return;
 
-        if (_heldVisual != null)
+        _heldVisual = CreateHeldVisual();
+    }
+
+    private bool VisualChanged()
+    {
+        if (_lastVisualIngredient == HeldIngredient &&
+            _lastVisualState == HeldPotionState)
         {
-            Destroy(_heldVisual);
+            return false;
         }
 
-        if (HeldIngredient ==
-            IngredientType.None)
-            return;
+        _lastVisualIngredient = HeldIngredient;
+        _lastVisualState = HeldPotionState;
 
-        GameObject visual =
-            GameObject.CreatePrimitive(
-                PrimitiveType.Cube
-            );
+        return true;
+    }
 
-        visual.transform.SetParent(
-            _holdPoint
+    private void DestroyHeldVisual()
+    {
+        if (_heldVisual != null)
+            Destroy(_heldVisual);
+    }
+
+    private GameObject CreateHeldVisual()
+    {
+        GameObject visual = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+        visual.transform.SetParent(_holdPoint);
+        visual.transform.localPosition = Vector3.zero;
+        visual.transform.localRotation = Quaternion.identity;
+        visual.transform.localScale = Vector3.one * 0.4f;
+
+        Collider collider = visual.GetComponent<Collider>();
+
+        if (collider != null)
+            Destroy(collider);
+
+        Renderer renderer = visual.GetComponent<Renderer>();
+
+        Material material = new(
+            Shader.Find("Universal Render Pipeline/Lit")
         );
 
-        visual.transform.localPosition =
-            Vector3.zero;
+        renderer.material = material;
+        renderer.material.color = GetPotionColor();
 
-        visual.transform.localRotation =
-            Quaternion.identity;
+        return visual;
+    }
 
-        visual.transform.localScale =
-            Vector3.one * 0.4f;
-
-        Collider col =
-            visual.GetComponent<Collider>();
-
-        if (col != null)
+    private Color GetPotionColor()
+    {
+        Color color = HeldIngredient switch
         {
-            Destroy(col);
-        }
+            IngredientType.Red => Color.red,
+            IngredientType.Blue => Color.blue,
+            IngredientType.Yellow => Color.yellow,
+            IngredientType.Green => Color.green,
+            IngredientType.Orange => new Color(1f, 0.5f, 0f),
+            IngredientType.Purple => new Color(0.5f, 0f, 1f),
+            _ => Color.white
+        };
 
-        Renderer renderer =
-            visual.GetComponent<Renderer>();
+        if (HeldPotionState == PotionState.Cooked)
+            color *= 0.7f;
 
-        Material mat =
-            new Material(
-                Shader.Find(
-                    "Universal Render Pipeline/Lit"
-                )
-            );
+        if (HeldPotionState == PotionState.Burned)
+            color = Color.black;
 
-        renderer.material = mat;
-
-        switch (HeldIngredient)
-        {
-            case IngredientType.Red:
-                renderer.material.color =
-                    Color.red;
-                break;
-
-            case IngredientType.Blue:
-                renderer.material.color =
-                    Color.blue;
-                break;
-
-            case IngredientType.Yellow:
-                renderer.material.color =
-                    Color.yellow;
-                break;
-
-            case IngredientType.Green:
-                renderer.material.color =
-                    Color.green;
-                break;
-
-            case IngredientType.Orange:
-                renderer.material.color =
-                    new Color(1f, 0.5f, 0f);
-                break;
-
-            case IngredientType.Purple:
-                renderer.material.color =
-                    new Color(0.5f, 0f, 1f);
-                break;
-        }
-
-        if (HeldPotionState ==
-            PotionState.Cooked)
-        {
-            renderer.material.color *= 0.7f;
-        }
-
-        if (HeldPotionState ==
-            PotionState.Burned)
-        {
-            renderer.material.color =
-                Color.black;
-        }
-
-        _heldVisual = visual;
+        return color;
     }
 
     private void OnDrawGizmosSelected()

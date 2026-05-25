@@ -11,123 +11,211 @@ public class NetworkAvatarSelection : NetworkBehaviour, IAvatarSelectionService
     [SerializeField] private AvatarRegistry _registry;
 
     [Networked, Capacity(MaxPlayers)]
-    private NetworkArray<int> _selections { get; }
+    private NetworkArray<int> Selections => default;
 
     [Networked, Capacity(MaxPlayers)]
-    private NetworkArray<NetworkBool> _ready { get; }
+    private NetworkArray<NetworkBool> ReadyStates => default;
 
-    private ChangeDetector _changes;
-    private static readonly Dictionary<PlayerRef, int> _persistedSelections = new();
+    private static readonly Dictionary<PlayerRef, int> PersistedSelections = new();
+
+    private ChangeDetector _changeDetector;
 
     public static NetworkAvatarSelection Instance { get; private set; }
+
     public static event Action OnAllPlayersReady;
     public static event Action<NetworkAvatarSelection> OnInstanceReady;
+
     public event Action OnStateChanged;
 
     public int AvatarCount => _registry.Count;
 
     public override void Spawned()
     {
-        if (Instance != null && Instance != this) return;
+        if (Instance != null && Instance != this)
+            return;
 
         Instance = this;
-        _changes = GetChangeDetector(ChangeDetector.Source.SimulationState);
+
+        _changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
 
         if (Object.HasStateAuthority)
-        {
-            var selections = _selections;
-            var ready = _ready;
-            for (int i = 0; i < MaxPlayers; i++)
-            {
-                selections[i] = NoSelection;
-                ready[i] = false;
-            }
-        }
+            InitializeSelections();
 
         OnInstanceReady?.Invoke(this);
     }
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
-        if (Instance == this) Instance = null;
+        if (Instance == this)
+            Instance = null;
     }
 
     public override void Render()
     {
-        bool anyChange = false;
-        foreach (var _ in _changes.DetectChanges(this))
-            anyChange = true;
-        if (anyChange) OnStateChanged?.Invoke();
+        if (HasStateChanged())
+            OnStateChanged?.Invoke();
     }
 
     public bool IsAvatarTaken(int avatarIndex)
     {
         for (int i = 0; i < MaxPlayers; i++)
-            if (_selections[i] == avatarIndex) return true;
+        {
+            if (Selections[i] == avatarIndex)
+                return true;
+        }
+
         return false;
     }
 
     public int GetPlayerSelection(PlayerRef player)
     {
-        int slot = PlayerToSlot(player);
-        if (slot < 0 || slot >= MaxPlayers) return NoSelection;
-        return _selections[slot];
+        int slot = GetPlayerSlot(player);
+
+        if (!IsValidSlot(slot))
+            return NoSelection;
+
+        return Selections[slot];
     }
 
-    public AvatarDefinition GetAvatarDefinition(int index) => _registry.Get(index);
+    public AvatarDefinition GetAvatarDefinition(int index)
+    {
+        return _registry.Get(index);
+    }
 
-    public void RequestSelectAvatar(int avatarIndex) => RPC_Select(Runner.LocalPlayer, avatarIndex);
-    public void RequestReady() => RPC_Ready(Runner.LocalPlayer);
+    public void RequestSelectAvatar(int avatarIndex)
+    {
+        RPC_SelectAvatar(Runner.LocalPlayer, avatarIndex);
+    }
+
+    public void RequestReady()
+    {
+        RPC_SetReady(Runner.LocalPlayer);
+    }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void RPC_Select(PlayerRef player, int avatarIndex)
+    private void RPC_SelectAvatar(PlayerRef player, int avatarIndex)
     {
-        if (IsAvatarTaken(avatarIndex)) return;
-        int slot = PlayerToSlot(player);
-        var selections = _selections;
-        var ready = _ready;
-        selections[slot] = avatarIndex;
-        ready[slot] = false;
+        if (!CanSelectAvatar(player, avatarIndex))
+            return;
+
+        int slot = GetPlayerSlot(player);
+
+        Selections.Set(slot, avatarIndex);
+        ReadyStates.Set(slot, false);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void RPC_Ready(PlayerRef player)
+    private void RPC_SetReady(PlayerRef player)
     {
-        int slot = PlayerToSlot(player);
-        if (_selections[slot] == NoSelection) return;
-        var ready = _ready;
-        ready[slot] = true;
-        CheckAllReady();
+        int slot = GetPlayerSlot(player);
+
+        if (!HasSelection(slot))
+            return;
+
+        ReadyStates.Set(slot, true);
+
+        if (AreAllPlayersReady())
+            NotifyAllPlayersReady();
     }
 
-    private void CheckAllReady()
+    private void InitializeSelections()
     {
-        foreach (var player in Runner.ActivePlayers)
+        for (int i = 0; i < MaxPlayers; i++)
         {
-            int slot = PlayerToSlot(player);
-            if (_selections[slot] == NoSelection || (bool)_ready[slot] == false) return;
+            Selections.Set(i, NoSelection);
+            ReadyStates.Set(i, false);
         }
-        RPC_NotifyAllReady();
+    }
+
+    private bool HasStateChanged()
+    {
+        foreach (var _ in _changeDetector.DetectChanges(this))
+            return true;
+
+        return false;
+    }
+
+    private bool CanSelectAvatar(PlayerRef player, int avatarIndex)
+    {
+        int slot = GetPlayerSlot(player);
+
+        if (!IsValidSlot(slot))
+            return false;
+
+        if (avatarIndex < 0 || avatarIndex >= AvatarCount)
+            return false;
+
+        if (IsAvatarTaken(avatarIndex))
+            return false;
+
+        return true;
+    }
+
+    private bool HasSelection(int slot)
+    {
+        if (!IsValidSlot(slot))
+            return false;
+
+        return Selections[slot] != NoSelection;
+    }
+
+    private bool AreAllPlayersReady()
+    {
+        foreach (PlayerRef player in Runner.ActivePlayers)
+        {
+            int slot = GetPlayerSlot(player);
+
+            if (!HasSelection(slot))
+                return false;
+
+            if (!ReadyStates[slot])
+                return false;
+        }
+
+        return true;
+    }
+
+    private void NotifyAllPlayersReady()
+    {
+        PersistSelections();
+        RPC_NotifyAllPlayersReady();
+    }
+
+    private void PersistSelections()
+    {
+        foreach (PlayerRef player in Runner.ActivePlayers)
+        {
+            int slot = GetPlayerSlot(player);
+            PersistedSelections[player] = Selections[slot];
+        }
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_NotifyAllReady()
+    private void RPC_NotifyAllPlayersReady()
     {
-        foreach (var player in Runner.ActivePlayers)
-        {
-            int slot = PlayerToSlot(player);
-            _persistedSelections[player] = _selections[slot];
-            Debug.Log($"[AvatarSelection] Guardando player {player} → avatar {_selections[slot]}");
-        }
         OnAllPlayersReady?.Invoke();
     }
 
     public static int GetPersistedSelection(PlayerRef player)
     {
-        return _persistedSelections.TryGetValue(player, out int idx) ? idx : NoSelection;
+        if (PersistedSelections.TryGetValue(player, out int selection))
+            return selection;
+
+        return NoSelection;
     }
 
-    public static void ClearPersistedSelections() => _persistedSelections.Clear();
+    public static void ClearPersistedSelections()
+    {
+        PersistedSelections.Clear();
+    }
 
-    private static int PlayerToSlot(PlayerRef player) => player.PlayerId - 1;
+    private static int GetPlayerSlot(PlayerRef player)
+    {
+        return player.PlayerId - 1;
+    }
+
+    private static bool IsValidSlot(int slot)
+    {
+        return slot >= 0 && slot < MaxPlayers;
+    }
 }

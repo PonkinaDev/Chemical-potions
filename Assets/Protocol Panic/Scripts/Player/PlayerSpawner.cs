@@ -9,46 +9,96 @@ public class PlayerSpawner : MonoBehaviour, IPlayerSpawner
 
     private readonly Dictionary<PlayerRef, NetworkObject> _spawnedPlayers = new();
 
-    // Posiciones de spawn para cada jugador
-private static readonly Vector3[] SpawnPositions =
-{
-    new(-3f, 0f, 1f),  // Jugador 1
-    new( 3f, 0f, 1f)   // Jugador 2
-};
+    private static readonly Vector3[] SpawnPositions =
+    {
+        new(-3f, 0f, 1f),
+        new(3f, 0f, 1f)
+    };
+
+    public int PlayerCount => _spawnedPlayers.Count;
 
     public void SpawnPlayer(NetworkRunner runner, PlayerRef player)
     {
-        if (!runner.IsServer) return;
+        if (!CanSpawn(runner, player))
+            return;
 
-        NetworkPrefabRef prefab = ResolveAvatarPrefab(player);
-        int index = _spawnedPlayers.Count;
-        Vector3 pos = index < SpawnPositions.Length ? SpawnPositions[index] : Vector3.zero;
+        NetworkPrefabRef prefab = GetPlayerPrefab(player);
+        Vector3 spawnPosition = GetSpawnPosition();
 
-        Debug.Log($"[PlayerSpawner] Spawneando player {player} con prefab válido: {prefab != NetworkPrefabRef.Empty}");
+        NetworkObject playerObject = runner.Spawn(
+            prefab,
+            spawnPosition,
+            Quaternion.identity,
+            player
+        );
 
-        NetworkObject obj = runner.Spawn(prefab, pos, Quaternion.identity, player);
-        _spawnedPlayers[player] = obj;
+        _spawnedPlayers[player] = playerObject;
+
+        Debug.Log($"[PlayerSpawner] Player {player} spawnedo");
     }
 
     public void DespawnPlayer(NetworkRunner runner, PlayerRef player)
     {
-        if (!_spawnedPlayers.TryGetValue(player, out NetworkObject obj)) return;
-        runner.Despawn(obj);
+        if (!_spawnedPlayers.TryGetValue(player, out NetworkObject playerObject))
+            return;
+
+        runner.Despawn(playerObject);
         _spawnedPlayers.Remove(player);
     }
 
-    public int PlayerCount => _spawnedPlayers.Count;
-
-    private NetworkPrefabRef ResolveAvatarPrefab(PlayerRef player)
+    private bool CanSpawn(NetworkRunner runner, PlayerRef player)
     {
-        int idx = NetworkAvatarSelection.GetPersistedSelection(player);
-        Debug.Log($"[PlayerSpawner] Player {player} → idx persistido: {idx} | _registry null: {_registry == null}");
+        if (runner == null)
+            return false;
 
-        if (idx == -1) return _fallbackPrefab;
+        if (!runner.IsServer)
+            return false;
 
-        var def = _registry.Get(idx);
-        Debug.Log($"[PlayerSpawner] AvatarDefinition null: {def == null} | Prefab vacío: {def.Prefab == NetworkPrefabRef.Empty}");
+        if (_spawnedPlayers.ContainsKey(player))
+            return false;
 
-        return def.Prefab;
+        return true;
+    }
+
+    private NetworkPrefabRef GetPlayerPrefab(PlayerRef player)
+    {
+        int avatarIndex = NetworkAvatarSelection.GetPersistedSelection(player);
+
+        if (!HasValidAvatarSelection(avatarIndex))
+            return _fallbackPrefab;
+
+        AvatarDefinition avatar = _registry.Get(avatarIndex);
+
+        if (avatar == null)
+            return _fallbackPrefab;
+
+        if (avatar.Prefab == NetworkPrefabRef.Empty)
+            return _fallbackPrefab;
+
+        return avatar.Prefab;
+    }
+
+    private bool HasValidAvatarSelection(int avatarIndex)
+    {
+        if (_registry == null)
+            return false;
+
+        if (avatarIndex < 0)
+            return false;
+
+        if (avatarIndex >= _registry.Count)
+            return false;
+
+        return true;
+    }
+
+    private Vector3 GetSpawnPosition()
+    {
+        int index = _spawnedPlayers.Count;
+
+        if (index < SpawnPositions.Length)
+            return SpawnPositions[index];
+
+        return Vector3.zero;
     }
 }
