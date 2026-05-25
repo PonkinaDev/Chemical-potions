@@ -186,8 +186,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _moveSpeed: 5
   _holdPoint: {fileID: 9098531824103634435}
+  _heldItemPrefab: {fileID: 4960806819752657302, guid: 31f7be41624fedd44b169aaa07e2f6ac, type: 3}
+  _colorMaterial: {fileID: 2100000, guid: 054b9cc264f500641a881c93359dd4e1, type: 2}
   _interactionRadius: 2
   _HeldIngredient: 0
+  _HeldPotionState: 0
 --- !u!114 &7819335598468601679
 MonoBehaviour:
   m_ObjectHideFlags: 0

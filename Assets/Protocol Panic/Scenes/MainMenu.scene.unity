@@ -1453,7 +1453,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Protocol
+  m_text: Mixer
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 016f502beac9e53428a1c805ee87881a, type: 2}
   m_sharedMaterial: {fileID: 2857296036035335680, guid: 016f502beac9e53428a1c805ee87881a, type: 2}
@@ -1848,7 +1848,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Panic
+  m_text: Vortex
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 016f502beac9e53428a1c805ee87881a, type: 2}
   m_sharedMaterial: {fileID: 2857296036035335680, guid: 016f502beac9e53428a1c805ee87881a, type: 2}
@@ -1875,8 +1875,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 30
+  m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18

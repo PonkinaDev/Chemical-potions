@@ -6,7 +6,7 @@ public class PotionCauldron : NetworkBehaviour
 {
     [Header("Visual")]
     [SerializeField]
-    private Renderer _renderer;
+    private Material _potionMaterial;
 
     [Header("Progress")]
     [SerializeField]
@@ -31,86 +31,56 @@ public class PotionCauldron : NetworkBehaviour
     [Networked]
     public float CookTimer { get; set; }
 
-    private IngredientType _lastPotion =
-        IngredientType.None;
-
-    private PotionState _lastState =
-        PotionState.Raw;
+    private IngredientType _lastPotion = IngredientType.None;
+    private PotionState _lastState = PotionState.Raw;
 
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority)
             return;
 
-        if (CurrentPotion ==
-            IngredientType.None)
+        if (CurrentPotion == IngredientType.None)
             return;
 
         CookTimer += Runner.DeltaTime;
 
         if (CookTimer >= _burnTime)
-        {
-            CurrentState =
-                PotionState.Burned;
-        }
+            CurrentState = PotionState.Burned;
         else if (CookTimer >= _cookTime)
-        {
-            CurrentState =
-                PotionState.Cooked;
-        }
+            CurrentState = PotionState.Cooked;
     }
 
     public override void Render()
     {
         UpdateVisual();
-
         UpdateProgressBar();
     }
 
-    public bool TryAddPotion(
-        IngredientType ingredient
-    )
+    public bool TryAddPotion(IngredientType ingredient)
     {
-        if (CurrentPotion !=
-            IngredientType.None)
+        if (CurrentPotion != IngredientType.None)
             return false;
 
-        CurrentPotion =
-            ingredient;
-
-        CurrentState =
-            PotionState.Raw;
-
+        CurrentPotion = ingredient;
+        CurrentState = PotionState.Raw;
         CookTimer = 0f;
 
         return true;
     }
 
-    public bool TryTakePotion(
-        out IngredientType potion,
-        out PotionState state
-    )
+    public bool TryTakePotion(out IngredientType potion, out PotionState state)
     {
         potion = IngredientType.None;
-
         state = PotionState.Raw;
 
-        if (CurrentPotion ==
-            IngredientType.None)
+        if (CurrentPotion == IngredientType.None)
             return false;
 
-        potion =
-            CurrentPotion;
+        potion = CurrentPotion;
+        state = CurrentState;
 
-        state =
-            CurrentState;
-
-        CurrentPotion =
-            IngredientType.None;
-
-        CurrentState =
-            PotionState.Raw;
-
+        CurrentPotion = IngredientType.None;
+        CurrentState = PotionState.Raw;
         CookTimer = 0f;
 
         return true;
@@ -118,72 +88,46 @@ public class PotionCauldron : NetworkBehaviour
 
     private void UpdateVisual()
     {
-        if (_lastPotion ==
-            CurrentPotion &&
-            _lastState ==
-            CurrentState)
+        if (_lastPotion == CurrentPotion && _lastState == CurrentState)
             return;
 
-        _lastPotion =
-            CurrentPotion;
+        _lastPotion = CurrentPotion;
+        _lastState = CurrentState;
 
-        _lastState =
-            CurrentState;
-
-        if (_renderer == null)
+        if (_potionMaterial == null)
             return;
 
-        Color targetColor =
-            Color.white;
+        Color targetColor = Color.white;
 
         switch (CurrentPotion)
         {
             case IngredientType.Red:
-                targetColor =
-                    Color.red;
+                targetColor = Color.red;
                 break;
-
             case IngredientType.Blue:
-                targetColor =
-                    Color.blue;
+                targetColor = Color.blue;
                 break;
-
             case IngredientType.Yellow:
-                targetColor =
-                    Color.yellow;
+                targetColor = Color.yellow;
                 break;
-
             case IngredientType.Green:
-                targetColor =
-                    Color.green;
+                targetColor = Color.green;
                 break;
-
             case IngredientType.Orange:
-                targetColor =
-                    new Color(1f, 0.5f, 0f);
+                targetColor = new Color(1f, 0.5f, 0f);
                 break;
-
             case IngredientType.Purple:
-                targetColor =
-                    new Color(0.5f, 0f, 1f);
+                targetColor = new Color(0.5f, 0f, 1f);
                 break;
         }
 
-        if (CurrentState ==
-            PotionState.Cooked)
-        {
+        if (CurrentState == PotionState.Cooked)
             targetColor *= 0.7f;
-        }
 
-        if (CurrentState ==
-            PotionState.Burned)
-        {
-            targetColor =
-                Color.black;
-        }
+        if (CurrentState == PotionState.Burned)
+            targetColor = Color.black;
 
-        _renderer.material.color =
-            targetColor;
+        _potionMaterial.color = targetColor;
     }
 
     private void UpdateProgressBar()
@@ -191,51 +135,29 @@ public class PotionCauldron : NetworkBehaviour
         if (_progressBar == null)
             return;
 
-        if (CurrentPotion ==
-            IngredientType.None)
+        if (CurrentPotion == IngredientType.None)
         {
-            _progressBar.gameObject
-                .SetActive(false);
-
+            _progressBar.gameObject.SetActive(false);
             return;
         }
 
-        _progressBar.gameObject
-            .SetActive(true);
+        _progressBar.gameObject.SetActive(true);
 
         if (CookTimer <= _cookTime)
         {
-            _progressBar.value =
-                Mathf.Clamp01(
-                    CookTimer / _cookTime
-                );
+            _progressBar.value = Mathf.Clamp01(CookTimer / _cookTime);
 
             if (_progressFill != null)
-            {
-                _progressFill.color =
-                    Color.green;
-            }
+                _progressFill.color = Color.green;
         }
         else
         {
             _progressBar.value = 1f;
 
-            float burnProgress =
-                Mathf.InverseLerp(
-                    _cookTime,
-                    _burnTime,
-                    CookTimer
-                );
+            float burnProgress = Mathf.InverseLerp(_cookTime, _burnTime, CookTimer);
 
             if (_progressFill != null)
-            {
-                _progressFill.color =
-                    Color.Lerp(
-                        Color.green,
-                        Color.red,
-                        burnProgress
-                    );
-            }
+                _progressFill.color = Color.Lerp(Color.green, Color.red, burnProgress);
         }
     }
 }
