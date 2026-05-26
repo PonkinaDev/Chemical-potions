@@ -528,7 +528,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: You prepared all the potions
+  m_text: You reached the score
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 016f502beac9e53428a1c805ee87881a, type: 2}
   m_sharedMaterial: {fileID: 2857296036035335680, guid: 016f502beac9e53428a1c805ee87881a, type: 2}
@@ -798,7 +798,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Win
+  m_text: WIN
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 016f502beac9e53428a1c805ee87881a, type: 2}
   m_sharedMaterial: {fileID: 2857296036035335680, guid: 016f502beac9e53428a1c805ee87881a, type: 2}
@@ -878,6 +878,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1087605283}
   m_CullTransparentMesh: 1
+--- !u!1 &1124836642
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1124836644}
+  - component: {fileID: 1124836643}
+  m_Layer: 0
+  m_Name: VictoryUI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1124836643
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1124836642}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c82dc28823c1da4bbf773fc6540ada9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ReturnToMenu
+  _menuSceneIndex: 0
+--- !u!4 &1124836644
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1124836642}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 16.35119, y: 0, z: -3.89959}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1172838071
 GameObject:
   m_ObjectHideFlags: 0
@@ -981,7 +1026,7 @@ GameObject:
   - component: {fileID: 1720400687}
   - component: {fileID: 1720400686}
   m_Layer: 5
-  m_Name: Btn_Playagain
+  m_Name: Btn_ReturnToMenu
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1050,7 +1095,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1720400687}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1124836643}
+        m_TargetAssemblyTypeName: ReturnToMenu, Assembly-CSharp
+        m_MethodName: Return
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1720400687
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1221,7 +1278,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Play again
+  m_text: RETURN TO MENU
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 220097618afad5f4fb8ff83ed9ef2e37, type: 2}
   m_sharedMaterial: {fileID: 5304950827253899979, guid: 220097618afad5f4fb8ff83ed9ef2e37, type: 2}
@@ -1590,3 +1647,4 @@ SceneRoots:
   - {fileID: 2042709402}
   - {fileID: 1172838076}
   - {fileID: 2075527588}
+  - {fileID: 1124836644}
