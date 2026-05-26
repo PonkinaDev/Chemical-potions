@@ -4,28 +4,32 @@ using UnityEngine.UI;
 
 public class OrderCardUI : MonoBehaviour
 {
-    [SerializeField]
-    private Image _potionImage;
+    [SerializeField] private Image _potionImage;
+    [SerializeField] private TextMeshProUGUI _rewardText;
+    [SerializeField] private IngredientIconDatabase _iconDB;
 
-    [SerializeField]
-    private TextMeshProUGUI _rewardText;
+    public IngredientType OrderType { get; private set; }
 
-    public IngredientType OrderType
-    {
-        get;
-        private set;
-    }
-
-    public void Setup(
-        IngredientType type,
-        int reward
-    )
+    public void Setup(IngredientType type, int reward)
     {
         OrderType = type;
-
         _rewardText.text = "$" + reward;
 
-        _potionImage.color =
-            IngredientColorUtility.GetColor(type);
+        if (_iconDB == null)
+        {
+            Debug.LogError("[OrderCardUI] IngredientIconDatabase NO asignado en el prefab");
+            return;
+        }
+
+        Sprite icon = _iconDB.Get(type);
+
+        if (icon == null)
+        {
+            Debug.LogError($"[OrderCardUI] No hay sprite asignado para {type} en el database");
+            return;
+        }
+
+        _potionImage.sprite = icon;
+        _potionImage.color = Color.white;
     }
 }
