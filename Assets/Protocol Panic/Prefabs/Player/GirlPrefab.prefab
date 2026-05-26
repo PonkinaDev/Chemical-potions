@@ -248,6 +248,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHeldItemVisual
   _holdPoint: {fileID: 9098531824103634435}
+  _potionPrefab: {fileID: 4960806819752657302, guid: 31f7be41624fedd44b169aaa07e2f6ac, type: 3}
 --- !u!1001 &3491986712908941885
 PrefabInstance:
   m_ObjectHideFlags: 0

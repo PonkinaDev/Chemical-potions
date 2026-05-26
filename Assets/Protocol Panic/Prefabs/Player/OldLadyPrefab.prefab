@@ -46,9 +46,9 @@ GameObject:
   - component: {fileID: 2311413574112747045}
   - component: {fileID: 1491913071969270943}
   - component: {fileID: 7819335598468601679}
-  - component: {fileID: 983215890834068708}
   - component: {fileID: 4932072009527946652}
   - component: {fileID: 5311191555457520969}
+  - component: {fileID: 983215890834068708}
   m_Layer: 0
   m_Name: OldLadyPrefab
   m_TagString: Untagged
@@ -210,19 +210,6 @@ MonoBehaviour:
   SyncParent: 0
   _autoAOIOverride: 1
   DisableSharedModeInterpolation: 0
---- !u!114 &983215890834068708
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9042392106076077253}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9bacaa987ef9c744ea558c3c220633fc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerHeldItemVisual
-  _holdPoint: {fileID: 9098531824103634435}
 --- !u!114 &4932072009527946652
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -248,6 +235,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9bf495b68ff7a0b439df401e0242d4ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInteractionHandler
+--- !u!114 &983215890834068708
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9042392106076077253}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bacaa987ef9c744ea558c3c220633fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHeldItemVisual
+  _holdPoint: {fileID: 9098531824103634435}
+  _potionPrefab: {fileID: 4960806819752657302, guid: 31f7be41624fedd44b169aaa07e2f6ac, type: 3}
 --- !u!1001 &5451656655336097485
 PrefabInstance:
   m_ObjectHideFlags: 0

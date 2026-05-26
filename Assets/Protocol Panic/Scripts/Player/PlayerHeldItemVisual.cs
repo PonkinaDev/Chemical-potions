@@ -2,54 +2,37 @@ using UnityEngine;
 
 public class PlayerHeldItemVisual : MonoBehaviour
 {
-    [SerializeField]
-    private Transform _holdPoint;
+    [SerializeField] private Transform _holdPoint;
+    [SerializeField] private GameObject _potionPrefab;
 
     private GameObject _heldVisual;
 
-    private IngredientType _lastIngredient =
-        IngredientType.None;
+    private IngredientType _lastIngredient = IngredientType.None;
+    private PotionState _lastState = PotionState.Raw;
 
-    private PotionState _lastState =
-        PotionState.Raw;
+    private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+    private static readonly int ColorId = Shader.PropertyToID("_Color");
 
-    public void UpdateVisual(
-        IngredientType ingredient,
-        PotionState potionState
-    )
+    public void UpdateVisual(IngredientType ingredient, PotionState potionState)
     {
-        if (!VisualChanged(
-            ingredient,
-            potionState))
-        {
+        if (!VisualChanged(ingredient, potionState))
             return;
-        }
 
         DestroyVisual();
 
         if (ingredient == IngredientType.None)
             return;
 
-        _heldVisual = CreateVisual(
-            ingredient,
-            potionState
-        );
+        _heldVisual = CreateVisual(ingredient, potionState);
     }
 
-    private bool VisualChanged(
-        IngredientType ingredient,
-        PotionState potionState
-    )
+    private bool VisualChanged(IngredientType ingredient, PotionState potionState)
     {
-        if (_lastIngredient == ingredient &&
-            _lastState == potionState)
-        {
+        if (_lastIngredient == ingredient && _lastState == potionState)
             return false;
-        }
 
         _lastIngredient = ingredient;
         _lastState = potionState;
-
         return true;
     }
 
@@ -59,50 +42,56 @@ public class PlayerHeldItemVisual : MonoBehaviour
             Destroy(_heldVisual);
     }
 
-    private GameObject CreateVisual(
-        IngredientType ingredient,
-        PotionState potionState
-    )
+    private GameObject CreateVisual(IngredientType ingredient, PotionState potionState)
     {
-        GameObject visual =
-            GameObject.CreatePrimitive(
-                PrimitiveType.Cube
-            );
+        if (_potionPrefab == null)
+        {
+            Debug.LogError("[PlayerHeldItemVisual] No asignaste _potionPrefab en el inspector.");
+            return null;
+        }
 
-        visual.transform.SetParent(_holdPoint);
+        GameObject visual = Instantiate(_potionPrefab, _holdPoint);
+        visual.transform.localPosition = Vector3.zero;
+        visual.transform.localRotation = Quaternion.identity;
 
-        visual.transform.localPosition =
-            Vector3.zero;
-
-        visual.transform.localRotation =
-            Quaternion.identity;
-
-        visual.transform.localScale =
-            Vector3.one * 0.4f;
-
-        Collider collider =
-            visual.GetComponent<Collider>();
-
-        if (collider != null)
-            Destroy(collider);
-
-        Renderer renderer =
-            visual.GetComponent<Renderer>();
-
-        Material material = new(
-            Shader.Find(
-                "Universal Render Pipeline/Lit"
-            )
-        );
-
-        renderer.material = material;
-
-        renderer.material.color =
-            IngredientColorUtility.GetPotionColor(
-                ingredient,
-                potionState
-            );
+        Color color = IngredientColorUtility.GetPotionColor(ingredient, potionState);
+        ApplyColor(visual, color);
 
         return visual;
+    }
+
+    private void ApplyColor(GameObject visual, Color color)
+    {
+        Renderer[] renderers =
+            visual.GetComponentsInChildren<Renderer>(true);
+
+        foreach (Renderer renderer in renderers)
+        {
+            if (renderer == null)
+                continue;
+
+            Material[] materials = renderer.materials;
+
+            if (materials.Length < 3)
+                continue;
+
+            Material targetMaterial = materials[1];
+
+            if (targetMaterial.HasProperty("_BaseColor"))
+            {
+                targetMaterial.SetColor(
+                    "_BaseColor",
+                    color
+                );
+            }
+
+            if (targetMaterial.HasProperty("_Color"))
+            {
+                targetMaterial.SetColor(
+                    "_Color",
+                    color
+                );
+            }
+        }
     }
 }
