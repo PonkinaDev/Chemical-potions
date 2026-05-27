@@ -67,7 +67,7 @@ El modelo de red es **Player Host con Photon Fusion 2**: quien crea la sala lanz
 4. La pantalla pasará al panel de lobby mostrando **"Sala creada — esperando jugador..."**.
 5. Cuando el segundo jugador se conecte, ambos serán llevados automáticamente a la pantalla de **selección de avatar**.
 
-![Main menu](Documentation/Images/main_menu.png)
+![Menu](images/menu.jpeg)
 
 ### Cliente — Unirse a una Sala
 
@@ -82,7 +82,7 @@ El modelo de red es **Player Host con Photon Fusion 2**: quien crea la sala lanz
 
 Una vez que ambos jugadores estén conectados, se activa la pantalla de selección de avatar. Cada jugador elige un personaje disponible y presiona **"Listo"**. Cuando ambos confirman su selección, la partida inicia automáticamente.
 
-![Avatar selection](Documentation/Images/avatar_selection.png)
+![Avatar](images/avatar.jpeg)
 
 ---
 
@@ -238,7 +238,7 @@ Las selecciones se persisten en el diccionario estático `PersistedSelections` p
                              runner.Shutdown() → SceneManager.LoadScene(0)
 ```
 
-![Victory screen](Documentation/Images/victory_screen.png)
+![Victoria](images/win.jpeg)
 
 **Condiciones especiales:**
 
