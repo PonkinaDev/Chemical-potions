@@ -1,6 +1,6 @@
 <a name="readme-top"></a>
 
-[![Unity](https://img.shields.io/badge/Unity-6000.x-black?style=for-the-badge&logo=unity&logoColor=white)](https://unity.com/)
+[![Unity](https://img.shields.io/badge/Unity-6000.3.8f1-black?style=for-the-badge&logo=unity&logoColor=white)](https://unity.com/)
 [![CSharp](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=csharp&logoColor=white)](https://learn.microsoft.com/en-us/dotnet/csharp/)
 [![Photon Fusion 2](https://img.shields.io/badge/Photon_Fusion-2-0082C8?style=for-the-badge&logo=photon&logoColor=white)](https://www.photonengine.com/fusion)
 [![Windows](https://img.shields.io/badge/Windows-10%2F11-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://www.microsoft.com/windows)
@@ -11,7 +11,7 @@
 
 # Chemical Potions — Juego Multijugador Cooperativo de Pociones
 
-Juego cooperativo en tiempo real de tipo *cocinero caótico*, desarrollado en Unity con **Photon Fusion 2** bajo la topología **Player Host**. Dos jugadores comparten una cocina mágica donde deben preparar y entregar pociones de colores antes de alcanzar la meta económica. El host actúa simultáneamente como servidor y jugador activo; no existe servidor dedicado.
+Juego cooperativo en tiempo real de tipo *científico caótico*, desarrollado en Unity con **Photon Fusion 2** bajo la topología **Player Host**. Dos jugadores comparten un laboratorio científico donde deben preparar y entregar pociones de colores antes de alcanzar la meta económica. El host actúa simultáneamente como servidor y jugador activo; no existe servidor dedicado.
 
 ---
 
@@ -33,11 +33,11 @@ Juego cooperativo en tiempo real de tipo *cocinero caótico*, desarrollado en Un
 
 ## Descripción General
 
-**Chemical Potions** es un juego cooperativo multijugador para exactamente 2 jugadores. Cada jugador controla un personaje dentro de una cocina mágica y debe colaborar para recoger ingredientes, mezclarlos en estaciones especializadas, cocinarlos correctamente y entregarlos al mostrador de pedidos. El objetivo es acumular **$300** antes de que el caos se apodere de la cocina.
+**Chemical Potions** es un juego cooperativo multijugador para exactamente 2 jugadores. Cada jugador controla un científico dentro de un laboratorio y debe colaborar para recoger reactivos, mezclarlos en estaciones especializadas, calentarlos correctamente en los mecheros de laboratorio y entregarlos al mostrador de pedidos. El objetivo es acumular **$300** antes de que el caos se apodere del laboratorio.
 
 El modelo de red es **Player Host con Photon Fusion 2**: quien crea la sala lanza el runner en modo `Host`, sincronizando el estado de todos los objetos de red. El cliente se conecta usando la infraestructura de matchmaking de Photon y ambos jugadores ingresan a la partida tras completar la selección de avatar.
 
-![Gameplay overview](Documentation/Images/gameplay_overview.png)
+![Gameplay overview](documentation%20images/gameplay_overview.png)
 
 ---
 
@@ -45,7 +45,7 @@ El modelo de red es **Player Host con Photon Fusion 2**: quien crea la sala lanz
 
 | Requisito | Detalle |
 |---|---|
-| Motor | Unity 6000.x LTS |
+| Motor | Unity 6000.3.8f1 |
 | Lenguaje | C# |
 | Framework de red | Photon Fusion 2 (Player Host Topology) |
 | Nombre de sesión | `ChemicalPotions` |
@@ -67,7 +67,7 @@ El modelo de red es **Player Host con Photon Fusion 2**: quien crea la sala lanz
 4. La pantalla pasará al panel de lobby mostrando **"Sala creada — esperando jugador..."**.
 5. Cuando el segundo jugador se conecte, ambos serán llevados automáticamente a la pantalla de **selección de avatar**.
 
-![Main menu](Documentation/Images/main_menu.png)
+![Main menu](documentation%20images/main_menu.png)
 
 ### Cliente — Unirse a una Sala
 
@@ -80,9 +80,9 @@ El modelo de red es **Player Host con Photon Fusion 2**: quien crea la sala lanz
 
 ### Selección de Avatar
 
-Una vez que ambos jugadores estén conectados, se activa la pantalla de selección de avatar. Cada jugador elige un personaje disponible y presiona **"Listo"**. Cuando ambos confirman su selección, la partida inicia automáticamente.
+Una vez que ambos jugadores estén conectados, se activa la pantalla de selección de avatar. Cada jugador elige un científico disponible y presiona **"Listo"**. Cuando ambos confirman su selección, la partida inicia automáticamente.
 
-![Avatar selection](Documentation/Images/avatar_selection.png)
+![Avatar selection](documentation%20images/avatar_selection.png)
 
 ---
 
@@ -116,10 +116,10 @@ El juego usa **Photon Fusion 2** en topología **Player Host**, lo que significa
 
 Los objetos de red críticos usan propiedades `[Networked]` de Fusion 2 para replicar su estado automáticamente:
 
-- `NetworkPlayer` — posición, rotación, ingrediente sostenido y estado de la poción.
+- `NetworkPlayer` — posición, rotación, reactivo sostenido y estado de la poción.
 - `OrderManager` — lista activa de pedidos (`NetworkArray<OrderNetworkData>`) y dinero total acumulado (`TotalMoney`).
 - `NetworkAvatarSelection` — selecciones de avatar por slot (`NetworkArray<int>`) y estados de listo (`NetworkArray<NetworkBool>`).
-- `PotionHotPlate` — tipo de ingrediente en cocción, temporizadores de cocción y quemado.
+- `PotionHotPlate` — tipo de reactivo en calentamiento, temporizadores de calentamiento y quemado.
 - `PotionMixer` — color actual resultante de las mezclas (`CurrentColor`).
 
 ### RPCs
@@ -147,20 +147,20 @@ La comunicación de acciones puntuales se maneja con `[Rpc]`:
 
 Los jugadores cooperan para completar pedidos que aparecen en el tablero de órdenes. Cada pedido requiere una poción de un color específico. Para entregarla, deben:
 
-1. Recoger el ingrediente primario correcto del dispensador.
+1. Recoger el reactivo primario correcto del dispensador.
 2. Llevarlo al **mezclador** si el pedido requiere un color secundario.
-3. Transferir el resultado a la **placa caliente** para cocerlo.
+3. Transferir el resultado al **mechero de laboratorio** para calentarlo.
 4. Entregarlo en la **zona de entrega** antes de que se queme.
 
-![Gameplay screenshot](Documentation/Images/gameplay_screenshot.png)
+![Gameplay screenshot](documentation%20images/gameplay_screenshot.png)
 
 ### Estaciones
 
-- **Dispenser** — suministra ingredientes de tipo primario (Rojo, Azul, Amarillo).
-- **PotionMixer** — combina dos ingredientes primarios para producir uno secundario.
-- **PotionHotPlate** — cuece la poción durante un tiempo determinado. Si se excede el tiempo de cocción, la poción se quema y no puede entregarse.
+- **Dispenser** — suministra reactivos de tipo primario (Rojo, Azul, Amarillo).
+- **PotionMixer** — combina dos reactivos primarios para producir uno secundario. Simula el mezclado de compuestos químicos en el laboratorio.
+- **PotionHotPlate** — calienta la poción sobre el mechero durante un tiempo determinado. Si se excede el tiempo de calentamiento, la poción se quema y no puede entregarse.
 - **DeliveryZone** — punto de entrega de pociones; solo acepta pociones en estado `Cooked`.
-- **TrashBin** — permite desechar ingredientes o pociones fallidas.
+- **TrashBin** — permite desechar reactivos o pociones fallidas en el contenedor de residuos del laboratorio.
 
 ### Condición de Victoria
 
@@ -170,7 +170,7 @@ El `VictoryManager` monitorea cada frame (solo en el servidor) el valor de `Orde
 
 ## Sistema de Ingredientes y Pociones
 
-### Ingredientes Primarios
+### Reactivos Primarios
 
 | Tipo | Color | Recompensa |
 |---|---|---|
@@ -178,7 +178,7 @@ El `VictoryManager` monitorea cada frame (solo en el servidor) el valor de `Orde
 | Blue | Azul | $10 |
 | Yellow | Amarillo | $10 |
 
-### Ingredientes Secundarios (mezclas)
+### Reactivos Secundarios (mezclas)
 
 | Combinación | Resultado | Color | Recompensa |
 |---|---|---|---|
@@ -189,23 +189,23 @@ El `VictoryManager` monitorea cada frame (solo en el servidor) el valor de `Orde
 ### Estados de la Poción
 
 ```
-Raw  →  (cocción dentro del tiempo)  →  Cooked  ✓ entregable
-Raw  →  (tiempo excedido)            →  Burned  ✗ no entregable
+Raw  →  (calentamiento dentro del tiempo)  →  Cooked  ✓ entregable
+Raw  →  (tiempo excedido)                  →  Burned  ✗ no entregable
 ```
 
-La `PotionHotPlate` muestra una barra de progreso que va de verde (cociendo correctamente) a rojo (quemándose). Un ingrediente del mismo tipo no puede mezclarse consigo mismo.
+El `PotionHotPlate` muestra una barra de progreso que va de verde (calentando correctamente) a rojo (quemándose). Un reactivo del mismo tipo no puede mezclarse consigo mismo.
 
 ---
 
 ## Selección de Avatar
 
-La pantalla de selección de avatar usa el `NetworkAvatarSelection`, un `NetworkBehaviour` con autoridad de estado en el host. Cada avatar está definido por un `AvatarDefinition` (ScriptableObject) que contiene nombre, prefab de red, imagen de previsualización y color de acento.
+La pantalla de selección de avatar usa el `NetworkAvatarSelection`, un `NetworkBehaviour` con autoridad de estado en el host. Cada avatar está definido por un `AvatarDefinition` (ScriptableObject) que contiene nombre, prefab de red, imagen de previsualización y color de acento. Los avatares representan científicos con distintas batas y apariencias de laboratorio.
 
 Los slots de selección se replican mediante `NetworkArray<int>` (índice de avatar por jugador) y `NetworkArray<NetworkBool>` (estado de listo). Al detectar que todos los jugadores activos tienen selección y están listos, la autoridad de estado invoca `RPC_NotifyAllPlayersReady` hacia todos los clientes, disparando la carga de la escena.
 
 Las selecciones se persisten en el diccionario estático `PersistedSelections` para que el `PlayerSpawner` pueda instanciar el prefab correcto al cargar la nueva escena.
 
-![Avatar selection detail](Documentation/Images/avatar_selection_detail.png)
+![Avatar selection detail](documentation%20images/avatar_selection_detail.png)
 
 ---
 
@@ -227,7 +227,7 @@ Las selecciones se persisten en el diccionario estático `PersistedSelections` p
                                         │
                               [Escena de Juego cargada]
                                         │
-                     Jugadores cooperan: recoger → mezclar → cocer → entregar
+              Científicos cooperan: recoger → mezclar → calentar → entregar
                                         │
                           TotalMoney >= $300  (chequeado cada frame por el host)
                                         │
@@ -238,13 +238,13 @@ Las selecciones se persisten en el diccionario estático `PersistedSelections` p
                              runner.Shutdown() → SceneManager.LoadScene(0)
 ```
 
-![Victory screen](Documentation/Images/victory_screen.png)
+![Victory screen](documentation%20images/victory_screen.png)
 
 **Condiciones especiales:**
 
 - Si un jugador se desconecta durante la partida, la sesión finaliza ya que el juego requiere exactamente 2 jugadores.
 - Si el host cierra la aplicación, el cliente recibe el evento `OnDisconnected` y regresa al menú principal.
-- Las pociones quemadas deben desecharse en el `TrashBin` antes de poder recoger nuevos ingredientes.
+- Las pociones quemadas deben desecharse en el `TrashBin` antes de poder recoger nuevos reactivos.
 
 ---
 
@@ -253,7 +253,7 @@ Las selecciones se persisten en el diccionario estático `PersistedSelections` p
 ```
 Scripts/
 ├── AvatarSelection/
-│   ├── AvatarDefinition              ScriptableObject con nombre, prefab, sprite y color de un avatar
+│   ├── AvatarDefinition              ScriptableObject con nombre, prefab, sprite y color de un científico
 │   ├── AvatarRegistry                ScriptableObject que agrupa todos los avatares disponibles
 │   ├── AvatarSelectionUI             UI de selección de avatar; escucha eventos de NetworkAvatarSelection
 │   ├── AvatarSlotUI                  Slot individual de avatar: preview, borde, indicador de selección
@@ -288,19 +288,19 @@ Scripts/
 │   └── OrderManager                  NetworkBehaviour con autoridad de estado; genera, valida y completa pedidos
 │
 ├── Player/
-│   ├── NetworkPlayer                 NetworkBehaviour principal del jugador: movimiento, interacción y estado de manos
-│   ├── PlayerHeldItemVisual          Muestra visualmente el ingrediente que el jugador sostiene
+│   ├── NetworkPlayer                 NetworkBehaviour principal del científico: movimiento, interacción y estado de manos
+│   ├── PlayerHeldItemVisual          Muestra visualmente el reactivo que el científico sostiene
 │   ├── PlayerInputData               Estructura de datos de input por frame
 │   ├── PlayerInputHandler            Lee el input local y lo empaqueta en PlayerInputData
-│   ├── PlayerInteractableDetector    Detecta los objetos interactuables cercanos al jugador
-│   ├── PlayerInteractionHandler      Ejecuta la lógica de recogida, depósito y entrega de ingredientes
+│   ├── PlayerInteractableDetector    Detecta los objetos interactuables cercanos al científico
+│   ├── PlayerInteractionHandler      Ejecuta la lógica de recogida, depósito y entrega de reactivos
 │   └── PlayerSpawner                 Implementa IPlayerSpawner; instancia el prefab de avatar correcto en spawn/despawn
 │
 ├── Stations/
-│   ├── Dispenser                     Fuente de ingredientes primarios; entrega al jugador al interactuar
-│   ├── PotionHotPlate                NetworkBehaviour; cuece la poción con temporizador, detecta quemado y muestra progreso
-│   ├── PotionMixer                   NetworkBehaviour; combina dos ingredientes primarios en uno secundario
-│   └── TrashBin                      Punto de descarte de ingredientes y pociones fallidas
+│   ├── Dispenser                     Fuente de reactivos primarios; entrega al científico al interactuar
+│   ├── PotionHotPlate                NetworkBehaviour; calienta la poción con temporizador, detecta quemado y muestra progreso
+│   ├── PotionMixer                   NetworkBehaviour; combina dos reactivos primarios en uno secundario
+│   └── TrashBin                      Contenedor de residuos para desechar reactivos y pociones fallidas
 │
 └── UI/
     ├── ConnectionUI                  UI alternativa de conexión con feedback de estado (Host / Join)
