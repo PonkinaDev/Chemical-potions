@@ -5,7 +5,7 @@ public class PlayerInteractableDetector : MonoBehaviour
     [SerializeField]
     private float _interactionRadius = 2f;
 
-    public IngredientDispenser NearbyDispenser
+    public Dispenser NearbyDispenser
     {
         get;
         private set;
@@ -44,7 +44,7 @@ public class PlayerInteractableDetector : MonoBehaviour
             );
 
         NearbyDispenser =
-            FindClosest<IngredientDispenser>(hits);
+            FindClosest<Dispenser>(hits);
 
         NearbyMixer =
             FindClosest<PotionMixer>(hits);

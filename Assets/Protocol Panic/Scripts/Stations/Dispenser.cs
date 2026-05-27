@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class IngredientDispenser : MonoBehaviour
+public class Dispenser : MonoBehaviour
 {
     [SerializeField]
     private IngredientType _ingredientType;
